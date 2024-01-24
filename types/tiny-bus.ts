@@ -1,5 +1,5 @@
 export type SubscriberID = string;
-export type EventName = string | symbol;
+export type EventName = string;
 
 export interface TinyBusInterface<T extends object = any> {
   /**

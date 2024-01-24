@@ -39,7 +39,7 @@ export default class TinyBus<T extends object = any>
     // throw error if event was already emitted
     if (!isUnique) {
       throw new Error(
-        `Event ${eventName.toString()} with args ${JSON.stringify(
+        `Event ${eventName} with args ${JSON.stringify(
           args,
         )} was already emitted.`,
       );
@@ -47,7 +47,7 @@ export default class TinyBus<T extends object = any>
 
     // throw error if no subscribers for event
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     const successFullCallbacks: string[] = [];
@@ -101,7 +101,7 @@ export default class TinyBus<T extends object = any>
       if (!!retryCount && !!maxRetries && retryCount === maxRetries + 1) {
         if (!successFullCallbacks.includes(id)) {
           // create retry error if the event was not successful
-          const message = `Event "${eventName.toString()}" failed with ${
+          const message = `Event "${eventName}" failed with ${
             exceptions.length
           } error(s) for subscriber "${subscriber}" after ${retryCount} retries.`;
 
@@ -167,7 +167,7 @@ export default class TinyBus<T extends object = any>
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     const subscriberArr = subscribers.toArray();
@@ -177,7 +177,7 @@ export default class TinyBus<T extends object = any>
 
     if (!subscriber) {
       throw new Error(
-        `No subscriber with id ${subscriberId} for event ${eventName.toString()}`,
+        `No subscriber with id ${subscriberId} for event ${eventName}`,
       );
     }
 
@@ -202,7 +202,7 @@ export default class TinyBus<T extends object = any>
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     // call unsubscribe handler if provided
@@ -227,7 +227,7 @@ export default class TinyBus<T extends object = any>
     }
 
     const eventId = Buffer.from(
-      `${eventName.toString()}:${JSON.stringify(args)}`,
+      `${eventName}:${JSON.stringify(args)}`,
     ).toString("base64");
 
     const isUnique = !this.processedEvents.has(eventId);
