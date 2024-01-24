@@ -1,6 +1,6 @@
 <p align="center">
-  <a href="https://github.co/fabio-nettis/tiny-bus">
-    <img src="" width="318px" alt="TinyBus logo" />
+  <a href="https://github.com/fabio-nettis/tiny-bus">
+    <img src="./assets/logo.svg" width="318px" alt="TinyBus Logo" />
   </a>
 </p>
 
