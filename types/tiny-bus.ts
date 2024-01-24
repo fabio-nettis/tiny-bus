@@ -82,7 +82,7 @@ export interface TinyBusOptions<T extends object = any> {
   uniqueEvents?: boolean;
   /**
    * Determines if the event bus persists events to the event store. Defaults
-   * to true.
+   * to true. If disabled, the `emit` method will return undefined.
    */
   persistEvents?: boolean;
   /**
