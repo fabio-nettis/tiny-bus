@@ -11,13 +11,13 @@
 ## Installation
 
 ```bash
-yarn add tiny-bus
+yarn add tiny-b
 ```
 
 ## Usage
 
 ```typescript
-import TinyBus from "tiny-bus";
+import TinyBus from "tiny-b";
 
 const tinyBus = new TinyBus(/* options */);
 

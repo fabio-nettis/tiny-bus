@@ -1,6 +1,7 @@
 {
-  "name": "tiny-bus",
+  "name": "tiny-b",
   "license": "MIT",
+  "private": false,
   "description": "A tiny and highly customizable event bus supporting different dispatching strategies.",
   "version": "1.0.0",
   "main": "dist/index.js",
