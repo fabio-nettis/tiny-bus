@@ -142,7 +142,7 @@ it("Replayed events work as expected and are not persisted", async () => {
       return id;
     },
     onRestore: async id => {
-      return store.get(id) as TinyBusEvent<any, any>;
+      return store.get(id)!;
     },
   });
 
@@ -170,7 +170,7 @@ it("Custom event replay strategies work as expected", async () => {
       return id;
     },
     onRestore: async eventId => {
-      return store.get(eventId) as TinyBusEvent<any, any>;
+      return store.get(eventId)!;
     },
   });
 
