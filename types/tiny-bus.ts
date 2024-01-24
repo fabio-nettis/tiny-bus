@@ -143,8 +143,8 @@ export interface TinyBusOptions<T extends object = any> {
    * from a database or other storage mechanism.
    */
   onRestore?: <A extends any[] = any[]>(
-    id: EventID,
-  ) => Promise<TinyBusEvent<T, A>>;
+    eventId: EventID,
+  ) => Promise<TinyBusEvent<T, any[]>>;
 }
 
 export type EventCallback<T extends object = any, A extends any[] = any[]> = (
