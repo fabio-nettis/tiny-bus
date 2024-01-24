@@ -28,7 +28,7 @@ export default class TinyBus<T extends object = any>
   constructor(private readonly options?: TinyBusOptions<T>) {
     // check if restore and persist functions are provided
     // if only one is provided, throw error
-    const callbacks = [!!this.options?.onRestore && !!this.options?.onPersist];
+    const callbacks = [!!this.options?.onRestore, !!this.options?.onPersist];
     if (callbacks.filter(c => !!c).length === 1) {
       throw new Error(
         "If providing a restore or persist function, both must be provided.",
@@ -49,12 +49,19 @@ export default class TinyBus<T extends object = any>
   public async replay<A extends any[] = any[]>(id: EventID) {
     const event = await this.restore<A>(id);
     if (!event) return;
-    await this.emit<A>(event.name, ...(event.args as A));
+    await this.emit<A>(
+      event.name,
+      ...([{ __replay: true, eventId: event.id }, ...(event.args as A)] as A),
+    );
   }
 
   public async emit<A extends any[] = any[]>(eventName: EventName, ...args: A) {
     const subscribers = this.subscribers.get(eventName);
-    const isUnique = await this.isUnique(eventName, args);
+    const isReplay = args[0]?.__replay === true;
+    const isUnique = isReplay ? true : await this.isUnique(eventName, args);
+
+    // clean up replay args so they are not passed to subscribers
+    if (isReplay) args.shift();
 
     // throw error if event was already emitted
     if (!isUnique) {
@@ -142,8 +149,8 @@ export default class TinyBus<T extends object = any>
       }
     }
 
-    // persist event if persistEvents is not set to false
-    if (this.options?.persistEvents !== false) {
+    // persist event if persistEvents is not set to false and this is not a replay
+    if (!isReplay && this.options?.persistEvents !== false) {
       const eventId = await this.persist({
         args,
         name: eventName,
