@@ -1,5 +1,8 @@
+import { nanoid } from "nanoid";
 import { expect, it } from "bun:test";
+
 import TinyBus from "classes/tiny-bus";
+import type { TinyBusEvent } from "dist";
 
 /**
  * Multiple run-through mode allows subscribers to be called multiple times
@@ -122,4 +125,57 @@ it('Mode "single" without unique events works as expected', async () => {
   } catch (error: any) {
     expect(error.message).toBe("No subscribers for event single::sub::args");
   }
+});
+
+/**
+ * Event replays allow subscribers to be called for events that were emitted
+ * before the subscriber was added.
+ */
+it("Replayed events work as expected and are not persisted", async () => {
+  const store = new Map<string, TinyBusEvent>();
+
+  const tinyBus = new TinyBus({
+    subscriberMode: "multiple",
+    onPersist: async event => {
+      const id = nanoid();
+      store.set(id, { id, ...event });
+      return id;
+    },
+    onRestore: async id => {
+      return store.get(id)!;
+    },
+  });
+
+  await tinyBus.on("test", { onCallback: () => {} });
+  await tinyBus.on("test", { onCallback: () => {} });
+
+  const eventId = await tinyBus.emit("test", "test");
+  expect(store.size).toBe(1);
+  await tinyBus.replay(eventId!);
+  expect(store.size).toBe(1);
+  expect(store.get(eventId!)?.name).toBe("test");
+});
+
+it("Custom event replay strategies work as expected", async () => {
+  const store = new Map<string, TinyBusEvent>();
+
+  const tinyBus = new TinyBus({
+    uniqueEvents: true,
+    context: { test: "test" },
+    subscriberMode: "multiple",
+    onPersist: async event => {
+      const id = nanoid();
+      expect(event.name).toBe("custom::sub::args");
+      store.set(id, { id, ...event });
+      return id;
+    },
+    onRestore: async eventId => {
+      return store.get(eventId)!;
+    },
+  });
+
+  await tinyBus.on("custom::sub::args", { onCallback: () => {} });
+  const eventId = await tinyBus.emit("custom::sub::args", "test");
+
+  await tinyBus.replay(eventId!);
 });

@@ -1,5 +1,25 @@
+export type EventID = string;
+export type EventName = string;
 export type SubscriberID = string;
-export type EventName = string | symbol;
+
+export interface TinyBusEvent<T extends object = any, A extends any[] = any[]> {
+  /**
+   * The ID of the event.
+   */
+  id: EventID;
+  /**
+   * The name of the event.
+   */
+  name: EventName;
+  /**
+   * The context provided to TinyBus when the event was emitted.
+   */
+  context?: T;
+  /**
+   * The arguments passed to the event.
+   */
+  args?: A;
+}
 
 export interface TinyBusInterface<T extends object = any> {
   /**
@@ -12,7 +32,7 @@ export interface TinyBusInterface<T extends object = any> {
   emit<A extends any[] = any[]>(
     eventName: EventName,
     ...args: A
-  ): Promise<void>;
+  ): Promise<EventID | undefined>;
 
   /**
    * Subscribes a callback to an event. The callback will be called with the
@@ -34,6 +54,12 @@ export interface TinyBusInterface<T extends object = any> {
    * will be thrown.
    */
   removeAll(eventName: EventName): Promise<EventName>;
+
+  /**
+   * Replays a specific event. This will emit the event to all subscribers
+   * without duplicating the event in the event store.
+   */
+  replay(eventId: EventID): Promise<void>;
 }
 
 export interface TinyBusOptions<T extends object = any> {
@@ -54,6 +80,11 @@ export interface TinyBusOptions<T extends object = any> {
    * emitted that has already been emitted. Defaults to true.
    */
   uniqueEvents?: boolean;
+  /**
+   * Determines if the event bus persists events to the event store. Defaults
+   * to true. If disabled, the `emit` method will return undefined.
+   */
+  persistEvents?: boolean;
   /**
    * Called to retrieve the id of the subscriber. If not provided, a random
    * id via the `nanoid()` function will be generated.
@@ -100,6 +131,20 @@ export interface TinyBusOptions<T extends object = any> {
     eventName: EventName,
     args: any[],
   ) => Promise<boolean> | boolean;
+  /**
+   * Called when an event is emitted. This can be used to persist the event
+   * to a database or other storage mechanism.
+   */
+  onPersist?: <A extends any[] = any[]>(
+    event: Omit<TinyBusEvent<T, A>, "id">,
+  ) => Promise<EventID>;
+  /**
+   * Called when an event is restored. This can be used to restore the event
+   * from a database or other storage mechanism.
+   */
+  onRestore?: <A extends any[] = any[]>(
+    eventId: EventID,
+  ) => Promise<TinyBusEvent<T, any[]>>;
 }
 
 export type EventCallback<T extends object = any, A extends any[] = any[]> = (

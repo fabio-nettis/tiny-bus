@@ -39,10 +39,3 @@ An event bus is a mechanism that allows different parts of an application to com
 ### Why another event bus?
 
 There are many event bus implementations out there, but TinyBus is different. Starting from the fact that it is tiny and has almost no dependencies, it also supports different dispatching strategies, event deduplication and retrying failed events out of the box.
-
-## Future plans
-
-Some of the features that are planned for the future are include but are not limited to the following list:
-
-- [ ] Add support for event tracing
-- [ ] Add support for event replay

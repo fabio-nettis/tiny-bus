@@ -1,8 +1,10 @@
 import { nanoid } from "nanoid";
 
 import type {
+  EventID,
   EventName,
   SubscriberID,
+  TinyBusEvent,
   TinyBusOptions,
   EventRetryError,
   TinyBusInterface,
@@ -11,6 +13,7 @@ import type {
   PriorityEventSubscriber,
 } from "types/tiny-bus";
 
+import EventStore from "classes/event-store";
 import PriorityQueue from "classes/priority-queue";
 
 /**
@@ -22,9 +25,20 @@ import PriorityQueue from "classes/priority-queue";
 export default class TinyBus<T extends object = any>
   implements TinyBusInterface<T>
 {
-  constructor(private readonly options?: TinyBusOptions<T>) {}
+  constructor(private readonly options?: TinyBusOptions<T>) {
+    // check if restore and persist functions are provided
+    // if only one is provided, throw error
+    const callbacks = [!!this.options?.onRestore, !!this.options?.onPersist];
+    if (callbacks.filter(c => !!c).length === 1) {
+      throw new Error(
+        "If providing a restore or persist function, both must be provided.",
+      );
+    }
+  }
 
+  private store: EventStore<T> = new EventStore<T>();
   private processedEvents = new Set<string>();
+
   private subscribers = new Map<
     EventName,
     PriorityQueue<PriorityEventSubscriber<T, any>>
@@ -32,14 +46,27 @@ export default class TinyBus<T extends object = any>
 
   private errorHandlers = new Map<EventName, Map<string, EventErrorCallback>>();
 
+  public async replay<A extends any[] = any[]>(id: EventID) {
+    const event = await this.restore<A>(id);
+    if (!event) return;
+    await this.emit<A>(
+      event.name,
+      ...([{ __replay: true, eventId: event.id }, ...(event.args as A)] as A),
+    );
+  }
+
   public async emit<A extends any[] = any[]>(eventName: EventName, ...args: A) {
     const subscribers = this.subscribers.get(eventName);
-    const isUnique = await this.isUnique(eventName, args);
+    const isReplay = args[0]?.__replay === true;
+    const isUnique = isReplay ? true : await this.isUnique(eventName, args);
+
+    // clean up replay args so they are not passed to subscribers
+    if (isReplay) args.shift();
 
     // throw error if event was already emitted
     if (!isUnique) {
       throw new Error(
-        `Event ${eventName.toString()} with args ${JSON.stringify(
+        `Event ${eventName} with args ${JSON.stringify(
           args,
         )} was already emitted.`,
       );
@@ -47,7 +74,7 @@ export default class TinyBus<T extends object = any>
 
     // throw error if no subscribers for event
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     const successFullCallbacks: string[] = [];
@@ -101,9 +128,7 @@ export default class TinyBus<T extends object = any>
       if (!!retryCount && !!maxRetries && retryCount === maxRetries + 1) {
         if (!successFullCallbacks.includes(id)) {
           // create retry error if the event was not successful
-          const message = `Event "${eventName.toString()}" failed with ${
-            exceptions.length
-          } error(s) for subscriber "${subscriber}" after ${retryCount} retries.`;
+          const message = `Event "${eventName}" failed with ${exceptions.length} error(s) for subscriber "${subscriber}" after ${retryCount} retries.`;
 
           const exception = new Error(message, {
             eventName,
@@ -122,6 +147,17 @@ export default class TinyBus<T extends object = any>
         // mode is set to single
         if (subscriberMode === "single") subscribers.pop();
       }
+    }
+
+    // persist event if persistEvents is not set to false and this is not a replay
+    if (!isReplay && this.options?.persistEvents !== false) {
+      const eventId = await this.persist({
+        args,
+        name: eventName,
+        context: this.options?.context,
+      });
+
+      return eventId;
     }
   }
 
@@ -167,7 +203,7 @@ export default class TinyBus<T extends object = any>
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     const subscriberArr = subscribers.toArray();
@@ -177,7 +213,7 @@ export default class TinyBus<T extends object = any>
 
     if (!subscriber) {
       throw new Error(
-        `No subscriber with id ${subscriberId} for event ${eventName.toString()}`,
+        `No subscriber with id ${subscriberId} for event ${eventName}`,
       );
     }
 
@@ -202,7 +238,7 @@ export default class TinyBus<T extends object = any>
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
-      throw new Error(`No subscribers for event ${eventName.toString()}`);
+      throw new Error(`No subscribers for event ${eventName}`);
     }
 
     // call unsubscribe handler if provided
@@ -227,7 +263,7 @@ export default class TinyBus<T extends object = any>
     }
 
     const eventId = Buffer.from(
-      `${eventName.toString()}:${JSON.stringify(args)}`,
+      `${eventName}:${JSON.stringify(args)}`,
     ).toString("base64");
 
     const isUnique = !this.processedEvents.has(eventId);
@@ -251,6 +287,21 @@ export default class TinyBus<T extends object = any>
   private async wait() {
     return new Promise(resolve =>
       setTimeout(resolve, this.options?.retryInterval ?? 500),
+    );
+  }
+
+  private async persist<A extends any[] = any[]>(
+    event: Omit<TinyBusEvent<T, A>, "id">,
+  ): Promise<EventID> {
+    return (
+      (await this.options?.onPersist<A>?.(event)) ??
+      this.store.persist<A>(event)
+    );
+  }
+
+  private async restore<A extends any[] = any[]>(id: EventID) {
+    return (
+      (await this.options?.onRestore<A>?.(id)) ?? this.store.restore<A>(id)
     );
   }
 }
