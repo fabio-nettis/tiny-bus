@@ -4,9 +4,9 @@
   </a>
 </p>
 
-<h3 align="center">A tiny and highly customizable event bus supporting different dispatching strategies.</h3>
+<h3 align="center">A tiny and highly customizable event bus. Created to be typesafe out of the box.</h3>
 
-<p align="center">Comes with built in retry and event deduplication support as well as many other features.</p>
+<p align="center">Comes with different dispatching strategies, retry support, event peristence, event replay and much more.</p>
 
 ## Installation
 
