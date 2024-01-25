@@ -61,7 +61,7 @@ jobs:
             
             | 📦 Main                    | 🚀 PR                        | 📁 Bundle Files              |
             |----------------------------|------------------------------|------------------------------|
-            |  ${{ env.bundle_size }}    | ${{ env.pr_bundle_size }}    | index.mjs / index.d.ts       |
+            |  ${{ env.bundle_size }} kB | ${{ env.pr_bundle_size }} kB | index.mjs / index.d.ts       |
             
             The difference between the current bundle and the on generated for your pull request is: **${{ env.client_diff }} kB**.
           repo-token: "${{ github.token }}"
