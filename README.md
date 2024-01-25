@@ -1,6 +1,6 @@
 <p align="center">
   <a href="https://github.com/fabio-nettis/tiny-bus">
-    <img src="./assets/logo.svg" width="318px" alt="TinyBus Logo" />
+    <img src="https://raw.githubusercontent.com/fabio-nettis/tiny-bus/main/assets/logo.svg" width="318px" alt="TinyBus Logo" />
   </a>
 </p>
 
@@ -10,14 +10,17 @@
 <br />
 
 <p align="center"> 
-  <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/bundle.yaml">
-    <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/bundle.yaml/badge.svg?branch=main" alt="Tests" />
-  </a>
   <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/github-code-scanning/codeql">
     <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main" alt="Tests" />
   </a>
   <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/tests.yaml">
     <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/tests.yaml/badge.svg?branch=main" alt="Tests" />
+  </a>
+  <a href="https://bundlephobia.com/package/tiny-b">
+    <img src="https://img.shields.io/bundlephobia/min/tiny-b" alt="Tests" />
+  </a>
+  <a href="https://bundlephobia.com/package/tiny-b">
+    <img src="https://img.shields.io/bundlephobia/minzip/tiny-b" alt="Tests" />
   </a>
 </p>
 
