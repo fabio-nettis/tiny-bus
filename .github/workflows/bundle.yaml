@@ -57,7 +57,11 @@ jobs:
         with:
           message-id: "bundle-size-comparison"
           message: |
-            📦 Main Branch Bundle Size: ${{ env.bundle_size }} KB
-            🚀 PR Branch Bundle Size: ${{ env.pr_bundle_size }} KB
-            Δ Client Size Difference: ${{ env.client_diff }} KB
+            Thank you for contributing to TinyBus! We try to keep our bundle size as small as possible, here you can see the impact of your pull request to the main bundle.
+            \r\n
+            | 📦 Main                    | 🚀 PR                        |
+            |----------------------------|------------------------------|
+            |  ${{ env.bundle_size }} kB | ${{ env.pr_bundle_size }} kB |
+            \r\n
+            The difference between the current bundle and the on in your pull request is: ${{ env.client_diff }} kB.
           repo-token: "${{ github.token }}"
