@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:      
+      pull-requests: write
 
     steps:
       - name: Checkout main branch
@@ -55,7 +57,11 @@ jobs:
         with:
           message-id: "bundle-size-comparison"
           message: |
-            📦 Main Branch Bundle Size: ${{ env.bundle_size }} KB
-            🚀 PR Branch Bundle Size: ${{ env.pr_bundle_size }} KB
-            Δ Client Size Difference: ${{ env.client_diff }} KB
+            Thank you for contributing to TinyBus! We try to keep our bundle size as small as possible, here you can see the impact of your pull request to the main bundle.
+            
+            | 📦 Main                    | 🚀 PR                        | 📁 Bundle Files              |
+            |----------------------------|------------------------------|------------------------------|
+            | ${{ env.bundle_size }} kB  | ${{ env.pr_bundle_size }} kB | index.mjs / index.d.ts       |
+            
+            The difference between the current bundle and the one generated for your pull request is: **${{ env.client_diff }} kB**.
           repo-token: "${{ github.token }}"

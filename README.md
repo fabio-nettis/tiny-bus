@@ -7,6 +7,19 @@
 <h3 align="center">A tiny and highly customizable event bus. Created to be typesafe out of the box.</h3>
 
 <p align="center">Comes with different dispatching strategies, retry support, event peristence, event replay and much more.</p>
+<br />
+
+<p align="center"> 
+  <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/bundle.yaml">
+    <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/bundle.yaml/badge.svg?branch=main" alt="Tests" />
+  </a>
+  <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/github-code-scanning/codeql">
+    <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/github-code-scanning/codeql/badge.svg?branch=main" alt="Tests" />
+  </a>
+  <a href="https://github.com/fabio-nettis/tiny-bus/actions/workflows/tests.yaml">
+    <img src="https://github.com/fabio-nettis/tiny-bus/actions/workflows/tests.yaml/badge.svg?branch=main" alt="Tests" />
+  </a>
+</p>
 
 ## Installation
 
