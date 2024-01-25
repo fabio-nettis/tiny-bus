@@ -70,6 +70,34 @@ it('Mode "multiple" without unique events works as expected', async () => {
   expect(unsubscribeId).toBe(subscriberId);
 });
 
+it("Removing all subscribers works as expected", async () => {
+  const tinyBus = new TinyBus({
+    uniqueEvents: false,
+    subscriberMode: "multiple",
+    context: { test: "test" },
+    onIdentifier: async () => "test",
+  });
+
+  await tinyBus.on("multiple::sub::args", {
+    onCallback: (id, context, ...args) => {},
+  });
+
+  await tinyBus.on("multiple::sub::args", {
+    onCallback: (id, context, ...args) => {},
+  });
+
+  await tinyBus.emit("multiple::sub::args", "test");
+  await tinyBus.emit("multiple::sub::args", "test");
+
+  await tinyBus.removeAll("multiple::sub::args");
+
+  try {
+    await tinyBus.emit("multiple::sub::args", "test");
+  } catch (error: any) {
+    expect(error.message).toBe("No subscribers for event multiple::sub::args");
+  }
+});
+
 /**
  * Single run-through mode allows subscribers to be called only once for the
  * same event. This is useful for things like sending emails or text messages.
