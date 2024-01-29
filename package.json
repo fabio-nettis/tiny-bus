@@ -3,7 +3,7 @@
   "license": "MIT",
   "private": false,
   "description": "A tiny and highly customizable event bus supporting different dispatching strategies.",
-  "version": "1.1.4",
+  "version": "1.2.0",
   "main": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "keywords": [
