@@ -2,7 +2,7 @@ import { expect, it } from "bun:test";
 
 import { c } from "utils/console";
 
-it("Returns correct the text with color", () => {
+it("Returns the correct color for each color name", () => {
   const text = "test";
   const red = `\x1b[31m${text}\x1b[0m`;
   const green = `\x1b[32m${text}\x1b[0m`;
