@@ -1,6 +1,6 @@
 export type DebugEventCallback = (
-  name: DebugEventName,
-  id: string,
+  debugEventName: DebugEventName,
+  debugEventId: string,
   duration?: string,
 ) => void;
 
