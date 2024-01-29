@@ -37,7 +37,7 @@ export default class TinyBus<T extends object = any>
     }
 
     // attach debug logger if debug option is set to true
-    if (this.options?.debug) {
+    if (this.options?.debug || this.options?.onDebug) {
       this.debug = new DebugLogger(this.options?.onDebug);
     }
   }
