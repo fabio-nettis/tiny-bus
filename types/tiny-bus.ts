@@ -1,3 +1,5 @@
+import type { DebugEventCallback } from "types/debug-logger";
+
 export type EventID = string;
 export type EventName = string;
 export type SubscriberID = string;
@@ -63,6 +65,16 @@ export interface TinyBusInterface<T extends object = any> {
 }
 
 export interface TinyBusOptions<T extends object = any> {
+  /**
+   * If set to true, the event bus will log debug information for all
+   * events emitted. Defaults to false.
+   */
+  debug?: boolean;
+  /**
+   * Called to replace the default debug logger. If not provided, the default
+   * debug logger will be used.
+   */
+  onDebug?: DebugEventCallback;
   /**
    * The context of the subscriber that emitted the event.
    */
