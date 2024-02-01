@@ -1,6 +1,8 @@
-import { c } from "utils/console";
+import { c, type ConsoleColors } from "utils/console";
 
 import type {
+  DebugEventName,
+  DebugEventKeyPrefix,
   DebugEventCallback,
   DebugLoggerInterface,
 } from "types/debug-logger";
@@ -10,140 +12,85 @@ import type {
  * optionally a callback can be provided to log events to a custom logger.
  */
 export default class DebugLogger implements DebugLoggerInterface {
-  private readonly time = new Map<string, Date>();
-
   constructor(private readonly callback?: DebugEventCallback) {}
 
-  private getDuration(id: string) {
+  // stores start times for each event
+  private readonly time = new Map<string, Date>();
+
+  // colors for each event type
+  colors: Record<DebugEventKeyPrefix, ConsoleColors> = {
+    error: "red",
+    emit: "green",
+    remove: "red",
+    unique: "cyan",
+    replay: "blue",
+    persist: "gray",
+    restore: "gray",
+    subscribe: "yellow",
+    removeAll: "red",
+  };
+
+  // sentences for each event type
+  sentences: Record<DebugEventKeyPrefix, string> = {
+    emit: "Emitting event",
+    remove: "Removing event",
+    replay: "Replaying event",
+    restore: "Restoring event",
+    persist: "Persisting event",
+    error: "Error handler for event",
+    subscribe: "Subscribing to event",
+    unique: "Uniqueness check for event",
+    removeAll: "Removing all subscribers for event",
+  };
+
+  getDuration(id: string): number {
     if (!this.time.has(id)) throw new Error(`No start time for ${id}`);
     const start = this.time.get(id);
     if (!start) throw new Error(`Invalid start time for ${id}`);
     const duration = new Date().getTime() - start.getTime();
     this.time.delete(id);
-    return duration.toFixed(2);
+    return duration;
   }
 
-  startReplay(id: string) {
-    this.time.set(`replay::${id}`, new Date());
-    if (this.callback) return this.callback("startReplay", id);
-    console.log(`${c("[Replay]", "blue")} Started replaying ${id}`);
+  log(
+    debugEventName: DebugEventName,
+    keyPrefix: DebugEventKeyPrefix,
+    debugEventId: string,
+  ) {
+    const key = `${keyPrefix}::${debugEventId}`;
+    const isEventStart = debugEventName.startsWith("start", 0);
+    if (isEventStart) {
+      this.time.set(key, new Date());
+      if (this.callback) return this.callback(debugEventName, debugEventId);
+      this.out(debugEventName, keyPrefix, debugEventId);
+    } else {
+      const ms = this.getDuration(`${keyPrefix}::${debugEventId}`);
+      if (this.callback) return this.callback(debugEventName, debugEventId, ms);
+      this.out(debugEventName, keyPrefix, debugEventId, ms);
+    }
   }
 
-  endReplay(id: string) {
-    const duration = this.getDuration(`replay::${id}`);
-    if (this.callback) return this.callback("endReplay", id, duration);
-    console.log(`${c("[Replay]", "blue")} Ended replay ${id} (${duration} ms)`);
-  }
+  out(
+    debugEventName: DebugEventName,
+    keyPrefix: DebugEventKeyPrefix,
+    debugEventId: string,
+    debugEventDurationMs?: number,
+  ) {
+    const color = this.colors[keyPrefix] ?? "gray";
+    const isEventStart = debugEventName.startsWith("start", 0);
+    const sentence = (this.sentences[keyPrefix] ?? "Unknown").toLowerCase();
 
-  startEmit(id: string) {
-    this.time.set(`emit::${id}`, new Date());
-    if (this.callback) return this.callback("startEmit", id);
-    console.log(`${c("[Emit]", "green")} Started emitting ${id}`);
-  }
-
-  endEmit(id: string) {
-    const duration = this.getDuration(`emit::${id}`);
-    if (this.callback) return this.callback("endEmit", id, duration);
-    console.log(
-      `${c("[Emit]", "green")} Ended emitting ${id} (${duration} ms)`,
+    const label = c(
+      `[${((str: string) => str.charAt(0).toUpperCase() + str.slice(1))(keyPrefix)}]`,
+      color,
     );
-  }
 
-  startSubscribe(id: string) {
-    this.time.set(`subscribe::${id}`, new Date());
-    if (this.callback) return this.callback("startSubscribe", id);
-    console.log(`${c("[New]", "yellow")} Started subscribing ${id}`);
-  }
-
-  endSubscribe(id: string) {
-    const duration = this.getDuration(`subscribe::${id}`);
-    if (this.callback) return this.callback("endSubscribe", id, duration);
-    console.log(
-      `${c("[New]", "yellow")} Ended subscribing ${id} (${duration} ms)`,
-    );
-  }
-
-  startRemove(id: string) {
-    this.time.set(`remove::${id}`, new Date());
-    if (this.callback) return this.callback("startRemove", id);
-    console.log(`${c("[End]", "red")} Started removing ${id}`);
-  }
-
-  endRemove(id: string) {
-    const duration = this.getDuration(`remove::${id}`);
-    if (this.callback) return this.callback("endRemove", id, duration);
-    console.log(`${c("[End]", "red")} Ended removing ${id} (${duration} ms)`);
-  }
-
-  startRemoveAll(id: string) {
-    this.time.set(`removeAll::${id}`, new Date());
-    if (this.callback) return this.callback("startRemoveAll", id);
-    console.log(`${c("[Clear]", "magenta")} Started removing all ${id}`);
-  }
-
-  endRemoveAll(id: string) {
-    const duration = this.getDuration(`removeAll::${id}`);
-    if (this.callback) return this.callback("endRemoveAll", id, duration);
-    console.log(
-      `${c("[Clear]", "magenta")} Ended removing all ${id} (${duration} ms)`,
-    );
-  }
-
-  startPersist(id: string) {
-    this.time.set(`persist::${id}`, new Date());
-    if (this.callback) return this.callback("startPersist", id);
-    console.log(`${c("[Replay]", "blue")} Started persisting ${id}`);
-  }
-
-  endPersist(id: string) {
-    const duration = this.getDuration(`persist::${id}`);
-    if (this.callback) return this.callback("endPersist", id, duration);
-    console.log(
-      `${c("[Replay]", "blue")} Ended persisting ${id} (${duration} ms)`,
-    );
-  }
-
-  startRestore(id: string) {
-    this.time.set(`restore::${id}`, new Date());
-    if (this.callback) return this.callback("startRestore", id);
-    console.log(`${c("[Replay]", "blue")} Started restoring ${id}`);
-  }
-
-  endRestore(id: string) {
-    const duration = this.getDuration(`restore::${id}`);
-    if (this.callback) return this.callback("endRestore", id, duration);
-    console.log(
-      `${c("[Replay]", "blue")} Ended restoring ${id} (${duration} ms)`,
-    );
-  }
-
-  startErrorHandler(id: string) {
-    this.time.set(`error::${id}`, new Date());
-    if (this.callback) return this.callback("startErrorHandler", id);
-    console.log(`${c("[Error]", "red")} Started handling error ${id}`);
-  }
-
-  endErrorHandler(id: string) {
-    const duration = this.getDuration(`error::${id}`);
-    if (this.callback) return this.callback("endErrorHandler", id, duration);
-    console.log(
-      `${c("[Error]", "red")} Ended handling error ${id} (${duration} ms)`,
-    );
-  }
-
-  startIsUnique(id: string) {
-    this.time.set(`unique::${id}`, new Date());
-    if (this.callback) return this.callback("startIsUnique", id);
-    console.log(
-      `${c("[Unique]", "cyan")} Started checking if event args for (${id}) are unique`,
-    );
-  }
-
-  endIsUnique(id: string) {
-    const duration = this.getDuration(`unique::${id}`);
-    if (this.callback) return this.callback("endIsUnique", id, duration);
-    console.log(
-      `${c("[Unique]", "cyan")} Ended checking if event args for (${id}) are unique (${duration} ms)`,
-    );
+    if (isEventStart) {
+      console.log(`${label} Started ${sentence} ${debugEventId}`);
+    } else {
+      console.log(
+        `${label} Ended ${sentence} ${debugEventId} (${debugEventDurationMs} ms)`,
+      );
+    }
   }
 }
