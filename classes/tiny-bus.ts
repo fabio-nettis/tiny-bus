@@ -54,14 +54,14 @@ export default class TinyBus<T extends object = any>
   private errorHandlers = new Map<EventName, Map<string, EventErrorCallback>>();
 
   public async replay<A extends any[] = any[]>(id: EventID) {
-    this.debug?.startReplay?.(id);
+    this.debug?.log?.("startReplay", "replay", id);
     const event = await this.restore<A>(id);
     if (!event) return;
     await this.emit<A>(
       event.name,
       ...([{ __replay: true, eventId: event.id }, ...(event.args as A)] as A),
     );
-    this.debug?.endReplay?.(id);
+    this.debug?.log?.("endReplay", "replay", id);
   }
 
   public async emit<A extends any[] = any[]>(eventName: EventName, ...args: A) {
@@ -70,7 +70,7 @@ export default class TinyBus<T extends object = any>
     const isUnique = isReplay ? true : await this.isUnique(eventName, args);
 
     // start debug timer if debug is enabled and this is not a replay
-    if (!isReplay) this.debug?.startEmit?.(eventName);
+    if (!isReplay) this.debug?.log?.("startEmit", "emit", eventName);
 
     // clean up replay args so they are not passed to subscribers
     if (isReplay) args.shift();
@@ -169,7 +169,7 @@ export default class TinyBus<T extends object = any>
         context: this.options?.context,
       });
 
-      this.debug?.endEmit?.(eventName);
+      this.debug?.log?.("endEmit", "emit", eventName);
       return eventId;
     }
   }
@@ -178,7 +178,7 @@ export default class TinyBus<T extends object = any>
     eventName: EventName,
     options: EventSubscriberOptions<T, A>,
   ): Promise<SubscriberID> {
-    this.debug?.startSubscribe?.(eventName);
+    this.debug?.log?.("startSubscribe", "subscribe", eventName);
 
     if (!this.subscribers.has(eventName)) {
       this.subscribers.set(
@@ -208,7 +208,7 @@ export default class TinyBus<T extends object = any>
     // call subscribe handler if provided
     await this.options?.onSubscribe?.(eventName, subscriberId);
 
-    this.debug?.endSubscribe?.(eventName);
+    this.debug?.log?.("endSubscribe", "subscribe", eventName);
     return subscriberId;
   }
 
@@ -216,7 +216,7 @@ export default class TinyBus<T extends object = any>
     eventName: EventName,
     subscriberId: string,
   ): Promise<SubscriberID> {
-    this.debug?.startRemove?.(eventName);
+    this.debug?.log?.("startRemove", "remove", eventName);
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
@@ -248,12 +248,12 @@ export default class TinyBus<T extends object = any>
     // call unsubscribe handler if provided
     await this.options?.onUnsubscribe?.(eventName, subscriberId);
 
-    this.debug?.endRemove?.(eventName);
+    this.debug?.log?.("endRemove", "remove", eventName);
     return subscriberId;
   }
 
   public async removeAll(eventName: EventName): Promise<EventName> {
-    this.debug?.startRemove?.(eventName);
+    this.debug?.log?.("startRemoveAll", "removeAll", eventName);
     const subscribers = this.subscribers.get(eventName);
 
     if (!subscribers?.size()) {
@@ -269,19 +269,19 @@ export default class TinyBus<T extends object = any>
     subscribers.clear();
     this.errorHandlers.delete(eventName);
 
-    this.debug?.endRemove?.(eventName);
+    this.debug?.log?.("endRemoveAll", "removeAll", eventName);
     return eventName;
   }
 
   private async isUnique(eventName: EventName, args: any[]): Promise<boolean> {
     // if unique events is disabled, return true
     if (this.options?.uniqueEvents === false) return true;
-    this.debug?.startIsUnique?.(eventName);
+    this.debug?.log?.("startIsUnique", "unique", eventName);
 
     // call onUniqueCheck handler if provided
     if (this.options?.onUniqueCheck) {
       const result = await this.options.onUniqueCheck(eventName, args);
-      this.debug?.endIsUnique?.(eventName);
+      this.debug?.log?.("endIsUnique", "unique", eventName);
       return result;
     }
 
@@ -292,7 +292,7 @@ export default class TinyBus<T extends object = any>
     const isUnique = !this.processedEvents.has(eventId);
     if (isUnique) this.processedEvents.add(eventId);
 
-    this.debug?.endIsUnique?.(eventName);
+    this.debug?.log?.("endIsUnique", "unique", eventName);
     return isUnique;
   }
 
@@ -301,13 +301,13 @@ export default class TinyBus<T extends object = any>
     subscriberId: SubscriberID,
     error: E,
   ) {
-    this.debug?.startErrorHandler?.(eventName);
+    this.debug?.log?.("startErrorHandler", "error", eventName);
     const errorHandlers = this.errorHandlers.get(eventName);
     if (!errorHandlers?.size) return;
     const handler = errorHandlers.get(subscriberId);
     if (!handler) throw error;
     handler({ error, eventName, subscriberId });
-    this.debug?.endErrorHandler?.(eventName);
+    this.debug?.log?.("endErrorHandler", "error", eventName);
   }
 
   private async wait() {
@@ -319,19 +319,19 @@ export default class TinyBus<T extends object = any>
   private async persist<A extends any[] = any[]>(
     event: Omit<TinyBusEvent<T, A>, "id">,
   ): Promise<EventID> {
-    this.debug?.startPersist?.(event.name);
+    this.debug?.log?.("startPersist", "persist", event.name);
     const result =
       (await this.options?.onPersist<A>?.(event)) ??
       this.store.persist<A>(event);
-    this.debug?.endPersist?.(event.name);
+    this.debug?.log?.("endPersist", "persist", event.name);
     return result;
   }
 
   private async restore<A extends any[] = any[]>(id: EventID) {
-    this.debug?.startRestore?.(id);
+    this.debug?.log?.("startRestore", "restore", id);
     const result =
       (await this.options?.onRestore<A>?.(id)) ?? this.store.restore<A>(id);
-    this.debug?.endRestore?.(id);
+    this.debug?.log?.("endRestore", "restore", id);
     return result;
   }
 }
