@@ -1,18 +1,17 @@
+export type ConsoleColors =
+  | "red"
+  | "gray"
+  | "green"
+  | "yellow"
+  | "blue"
+  | "magenta"
+  | "cyan"
+  | "white";
+
 /**
  * Log a message to the console with a color.
  */
-export const c = (
-  text: string,
-  color:
-    | "red"
-    | "gray"
-    | "green"
-    | "yellow"
-    | "blue"
-    | "magenta"
-    | "cyan"
-    | "white",
-) => {
+export const c = (text: string, color: ConsoleColors) => {
   switch (color) {
     case "red":
       return `\x1b[31m${text}\x1b[0m`;
